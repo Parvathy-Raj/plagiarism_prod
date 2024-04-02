@@ -23,10 +23,8 @@ def search_and_similarity(line):
             print(url)
             parsed_url = urlparse(url)
             domain = parsed_url.netloc
-            # unique_domains.add(domain)
-            # print(domain),
-            # report['domains'] = list(unique_domains)
-            for line_part in line.split('.'):
+            
+            for line_part in line.split('.'):                  #split the text into parts
                 line_source_entry = {"line_part": line_part , "url": url}
                 lines_source.append(line_source_entry)
                 report['lines_source'].append(line_source_entry)
@@ -49,10 +47,6 @@ def search_and_similarity(line):
         else:
             print("No plagiarism found")
             
-            # for line_part in line.split('.'):
-            #     line_source_entry = {"line_part": line_part, "url": ""}
-            #     lines_source.append(line_source_entry)
-            #     report['lines_source'].append(line_source_entry)
                 
     report['distinct_domain_count'] = len(distinct_domains)
             
@@ -73,21 +67,6 @@ def search_and_similarity(line):
     
     return report 
 
-# def similarity():
-    
-#     text1 = (corpus['corpus_data'])
-#     print("similarity checking")
-#     text2 = "I apologize for the confusion. It appears I made an error in my response. The slugify function is not directly available in the django.utils.text module. Instead, you can use the slugify function from the django.utils module."
-#     print(text2)
-#         # Create a TF-IDF vectorizer    
-#     vectorizer = CountVectorizer()
-#         # Fit and transform the documents into TF vectors
-#     tf_matrix = vectorizer.fit_transform([text1, text2])
-#         # Compute cosine similarity between the TF vectors
-#     cosine_sim = cosine_similarity(tf_matrix[0], tf_matrix[1])[0][0]
-#         # Calculating plagiarism percentage
-#     plag_percent = cosine_sim * 100 
-        
-#     return plag_percent
+
 
 #print(search_and_similarity(".An attempt to orient the unconverted and the semi-converted on the history and benefits of Free and Open Source Software (FOSS). Created for the PANACeA FOSS training in Bangkok (Feb 2010). ."))
