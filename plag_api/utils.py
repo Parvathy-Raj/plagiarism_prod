@@ -7,6 +7,19 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import json  
 from requests.exceptions import ReadTimeout
+import sqlite3
+
+def fetch_data_from_database():
+    conn = sqlite3.connect('journal.db')  # Connect database
+    cursor = conn.cursor()
+    # Retrieve content from a table named 'journalDB'
+    cursor.execute("SELECT content , paper_name , author FROM journalDB")
+    rows = cursor.fetchall()
+    # Extract content from database rows
+    database_data = [{'content': row[0], 'paper_name': row[1], 'author': row[2]} for row in rows]
+    conn.close()
+    
+    return database_data 
 
 def search_and_similarity(line):
     unique_domains = {}
@@ -24,7 +37,7 @@ def search_and_similarity(line):
             parsed_url = urlparse(url)
             domain = parsed_url.netloc
             
-            for line_part in line.split('.'):                  #split the text into parts
+            for line_part in line.split('.'):   #split the text into parts
                 line_source_entry = {"line_part": line_part , "url": url}
                 lines_source.append(line_source_entry)
                 report['lines_source'].append(line_source_entry)
@@ -37,7 +50,6 @@ def search_and_similarity(line):
             report['urls'].append(url)
             report['domains'] = [{'domain': domain, 'count': count} for domain, count in unique_domains.items()]
             try :
-                #print(url)
                 r = requests.get(url , timeout=30 )  # Search in Google
                 soup = BeautifulSoup(r.content, "html.parser")
                 paragraphs = soup.find_all("p")
@@ -46,12 +58,28 @@ def search_and_similarity(line):
                 report['corpus_data'] = ""
         else:
             print("No plagiarism found")
-            
-                
+           
     report['distinct_domain_count'] = len(distinct_domains)
-            
     text1 = (report['corpus_data'])
+
+    database_data = fetch_data_from_database()
+    # Calculating similarity with database 
+    max_similarity = 0
+    for data in database_data:
+        text3 = data['content']  #'content' is the field in the database
+        text2 = line
+        vectorizer = CountVectorizer()
+        tf_matrix = vectorizer.fit_transform([text3, text2])
+        cosine_sim = cosine_similarity(tf_matrix[0], tf_matrix[1])[0][0]
+        max_similarity = max(max_similarity, cosine_sim)
+        if max_similarity != 0 :
+            report['paper_name'] = data['paper_name']
+            report['author'] = data['author']
+        
+    db_similarity = max_similarity * 100
+
     print("similarity checking")
+
     text2 = line
     print(text2)
         # Create a TF-IDF vectorizer    
@@ -61,12 +89,24 @@ def search_and_similarity(line):
         # Compute cosine similarity between the TF vectors
     cosine_sim = cosine_similarity(tf_matrix[0], tf_matrix[1])[0][0]
         # Calculating plagiarism percentage
-    plag_percent = cosine_sim * 100     
+    sim_percent = cosine_sim * 100
+
+#calcaluting overall plagiarism percentage
+    if db_similarity == 0 :
+        plag_percent = sim_percent
+    elif sim_percent == 0 :
+        plag_percent = db_similarity
+    else :
+        plag_percent = (sim_percent+db_similarity)/2
+        
+
     report['plag_percent'] = plag_percent
-    # json_report= json.dumps(report, indent=4,ensure_ascii=False)  
+
+    
     
     return report 
 
 
 
-#print(search_and_similarity(".An attempt to orient the unconverted and the semi-converted on the history and benefits of Free and Open Source Software (FOSS). Created for the PANACeA FOSS training in Bangkok (Feb 2010). ."))
+# print(search_and_similarity("കേരളവും ബുദ്ധമതവുംഒരു ജനതയുടെ സംസ്കാരം രൂപപ്പെടുന്നത്‌ അവരുടെ ദൈനംദിന ജീവിതസാഹചര്യങ്ങളെ ആശ്രയിച്ചാണ്‌. സംസ്കാരപഠനശാഖ വിപുലമായതോടെസംസ്കാരമെന്നത്‌ വിശാലമായ അര്‍ത്ഥം ഉള്‍ക്കൊള്ളുന്ന പദമായി തീര്‍ന്നി"))
+

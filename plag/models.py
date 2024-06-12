@@ -19,3 +19,17 @@ class DomainCount(models.Model):
     
     def __str__(self):
         return self.id
+    
+
+class journalDB(models.Model):
+      
+    paper_id = models.IntegerField()
+    paper_name = models.TextField()
+    author = models.TextField()
+    content = models.TextField()
+
+    def __str__(self):
+        return self.id
+
+
+
