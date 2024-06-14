@@ -19,7 +19,7 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('',include(('plag.urls', 'plag') , namespace='plag')),
-    path('api/',include(('plag_api.urls','plag_api') , namespace='plag_api'))
+    path('backend/',include(('plag.urls', 'plag') , namespace='plag')),
+    path('backend/api/',include(('plag_api.urls','plag_api') , namespace='plag_api'))
     
 ]
